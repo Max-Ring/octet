@@ -38,8 +38,9 @@ namespace octet {
       texture = 0;
       enabled = true;
     }
-
-    void init(int _texture, float x, float y, float w, float h) {
+	
+    void init(int _texture, float x, float y, float w, float h) 
+	{
       modelToWorld.loadIdentity();
       modelToWorld.translate(x, y, 0);
       halfWidth = w * 0.5f;
@@ -47,6 +48,7 @@ namespace octet {
       texture = _texture;
       enabled = true;
     }
+
 
     void render(texture_shader &shader, mat4t &cameraToWorld) {
       // invisible sprite... used for gameplay.
@@ -103,6 +105,10 @@ namespace octet {
       modelToWorld.translate(x, y, 0);
     }
 
+	void rotate(float angle, float x, float y, float z) {
+		modelToWorld.rotate(angle, x, y, z);
+	}
+
     // position the object relative to another.
     void set_relative(sprite &rhs, float x, float y) {
       modelToWorld = rhs.modelToWorld;
@@ -148,8 +154,8 @@ namespace octet {
       num_sound_sources = 8,
       num_rows = 5,
       num_cols = 10,
-      num_missiles = 2,
-      num_bombs = 2,
+      num_missiles = 10,
+      num_bombs = 10,
       num_borders = 4,
       num_invaderers = num_rows * num_cols,
 
@@ -186,7 +192,7 @@ namespace octet {
     int score;
 
     // speed of enemy
-    float invader_velocity;
+	float invader_velocity;
 
     // sounds
     ALuint whoosh;
@@ -238,19 +244,41 @@ namespace octet {
 
     // use the keyboard to move the ship
     void move_ship() {
-      const float ship_speed = 0.05f;
+      const float ship_speed = 0.1f;
       // left and right arrows
-      if (is_key_down(key_left)) {
+      if (is_key_down(key_left)) 
+	  {
         sprites[ship_sprite].translate(-ship_speed, 0);
-        if (sprites[ship_sprite].collides_with(sprites[first_border_sprite+2])) {
+        if (sprites[ship_sprite].collides_with(sprites[first_border_sprite+2])) 
+		{
           sprites[ship_sprite].translate(+ship_speed, 0);
         }
-      } else if (is_key_down(key_right)) {
+      } else if (is_key_down(key_right)) 
+	  {
         sprites[ship_sprite].translate(+ship_speed, 0);
-        if (sprites[ship_sprite].collides_with(sprites[first_border_sprite+3])) {
+		
+        if (sprites[ship_sprite].collides_with(sprites[first_border_sprite+3])) 
+		{
           sprites[ship_sprite].translate(-ship_speed, 0);
         }
       }
+
+	  if (is_key_down(key_up)) 
+	  {
+		  sprites[ship_sprite].translate(0, +ship_speed);
+		  if (sprites[ship_sprite].collides_with(sprites[first_border_sprite + 1])) 
+		  {
+			  sprites[ship_sprite].translate(0, -ship_speed);
+		  }
+	  }
+	  else if (is_key_down(key_down))
+	  {
+		  sprites[ship_sprite].translate(0, -ship_speed);
+		  if (sprites[ship_sprite].collides_with(sprites[first_border_sprite + 0]))
+		  {
+			  sprites[ship_sprite].translate(0, +ship_speed);
+		  }
+	  }
     }
 
     // fire button (space)
@@ -303,7 +331,7 @@ namespace octet {
 
     // animate the missiles
     void move_missiles() {
-      const float missile_speed = 0.3f;
+      const float missile_speed = 0.1f;
       for (int i = 0; i != num_missiles; ++i) {
         sprite &missile = sprites[first_missile_sprite+i];
         if (missile.is_enabled()) {
@@ -441,7 +469,7 @@ namespace octet {
       }
 
       // set the border to white for clarity
-      GLuint white = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
+      GLuint white = resource_dict::get_texture_handle(GL_RGB, "#ff0000");
       sprites[first_border_sprite+0].init(white, 0, -3, 6, 0.2f);
       sprites[first_border_sprite+1].init(white, 0,  3, 6, 0.2f);
       sprites[first_border_sprite+2].init(white, -3, 0, 0.2f, 6);
@@ -472,7 +500,7 @@ namespace octet {
       // sundry counters and game state.
       missiles_disabled = 0;
       bombs_disabled = 50;
-      invader_velocity = 0.01f;
+      invader_velocity = 0.05f;
       live_invaderers = num_invaderers;
       num_lives = 3;
       game_over = false;
@@ -508,11 +536,15 @@ namespace octet {
     void draw_world(int x, int y, int w, int h) {
       simulate();
 
+	  if (game_over && is_key_going_up(key_enter)) {
+		  app_init();
+		  return;
+	  }
       // set a viewport - includes whole window area
       glViewport(x, y, w, h);
 
       // clear the background to black
-      glClearColor(0, 0, 0, 1);
+      glClearColor(1, 0, 2, 1);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       // don't allow Z buffer depth testing (closer objects are always drawn in front of far ones)
