@@ -49,6 +49,9 @@ namespace octet {
       enabled = true;
     }
 
+	void replaceSpriteTexture(GLuint newTexture) {
+		texture = newTexture;
+	}
 
     void render(texture_shader &shader, mat4t &cameraToWorld) {
       // invisible sprite... used for gameplay.
@@ -151,7 +154,7 @@ namespace octet {
     texture_shader texture_shader_;
 
     enum {
-      num_sound_sources = 8,
+      num_sound_sources = 12,
       num_rows = 5,
       num_cols = 10,
       num_missiles = 10,
@@ -196,7 +199,8 @@ namespace octet {
 
     // sounds
     ALuint whoosh;
-    ALuint bang;
+    ALuint Quack;
+	ALuint bang;
     unsigned cur_source;
     ALuint sources[num_sound_sources];
 
@@ -217,7 +221,7 @@ namespace octet {
     // called when we hit an enemy
     void on_hit_invaderer() {
       ALuint source = get_sound_source();
-      alSourcei(source, AL_BUFFER, bang);
+      alSourcei(source, AL_BUFFER, Quack);
       alSourcePlay(source);
 
       live_invaderers--;
@@ -287,17 +291,25 @@ namespace octet {
         --missiles_disabled;
       } else if (is_key_going_down(' ')) {
         // find a missile
-        for (int i = 0; i != num_missiles; ++i) {
-          if (!sprites[first_missile_sprite+i].is_enabled()) {
-            sprites[first_missile_sprite+i].set_relative(sprites[ship_sprite], 0, 0.5f);
-            sprites[first_missile_sprite+i].is_enabled() = true;
-            missiles_disabled = 5;
-            ALuint source = get_sound_source();
-            alSourcei(source, AL_BUFFER, whoosh);
-            alSourcePlay(source);
-            break;
-          }
-        }
+		  for (int i = 0; i != num_missiles; ++i) {
+			  if (!sprites[first_missile_sprite + i].is_enabled()) {
+				  sprites[first_missile_sprite + i].set_relative(sprites[ship_sprite], 0.25f, 0.5f);
+				  sprites[first_missile_sprite + i].is_enabled() = true;
+				  missiles_disabled = 5;
+				  ALuint source = get_sound_source();
+				  alSourcei(source, AL_BUFFER, whoosh);
+				  alSourcePlay(source);
+				  break;
+			  }
+		  }
+		  for (int i = 0; i != num_missiles; ++i) {
+			  if (!sprites[first_missile_sprite + i].is_enabled()) {
+				  sprites[first_missile_sprite + i].set_relative(sprites[ship_sprite], -0.25f, 0.5f);
+				  sprites[first_missile_sprite + i].is_enabled() = true;
+				  missiles_disabled = 5;
+				  break;
+			  }
+		  }
       }
     }
 
@@ -458,12 +470,12 @@ namespace octet {
       GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/GameOver.gif");
       sprites[game_over_sprite].init(GameOver, 20, 0, 3, 1.5f);
 
-      GLuint invaderer = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/invaderer.gif");
+      GLuint invaderer = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/Ducky.gif");
       for (int j = 0; j != num_rows; ++j) {
         for (int i = 0; i != num_cols; ++i) {
           assert(first_invaderer_sprite + i + j*num_cols <= last_invaderer_sprite);
           sprites[first_invaderer_sprite + i + j*num_cols].init(
-            invaderer, ((float)i - num_cols * 0.5f) * 0.5f, 2.50f - ((float)j * 0.5f), 0.25f, 0.25f
+            invaderer, ((float)i - num_cols * 0.5f) * 0.5f, 2.50f - ((float)j * 0.5f), 0.50f, 0.50f
           );
         }
       }
@@ -492,8 +504,10 @@ namespace octet {
       }
 
       // sounds
-      whoosh = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/whoosh.wav");
-      bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
+	  whoosh = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/whoosh.wav");
+	  bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
+	  Quack = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/Quack.wav");
+
       cur_source = 0;
       alGenSources(num_sound_sources, sources);
 
@@ -529,9 +543,25 @@ namespace octet {
       if (invaders_collide(border)) {
         invader_velocity = -invader_velocity;
         move_invaders(invader_velocity, -0.1f);
+		if (invader_velocity < 0) {
+			changeTexture("assets/invaderers/DuckyMoonWalk.gif");
+//change to moonwalk
+		}
+		else if (invader_velocity > 0) {
+			changeTexture("assets/invaderers/Ducky.gif");
+//change to ducky
+		}
       }
     }
-
+	void changeTexture(string file) {
+		for (int i = first_invaderer_sprite; i <= last_invaderer_sprite; i++) {
+			sprite &ducky = sprites[i];
+			if (ducky.is_enabled()) {
+				GLuint newTexture = resource_dict::get_texture_handle(GL_RGBA, file);
+				ducky.replaceSpriteTexture(newTexture);
+			}
+		}
+	}
     // this is called to draw the world
     void draw_world(int x, int y, int w, int h) {
       simulate();
