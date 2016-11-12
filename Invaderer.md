@@ -1,5 +1,8 @@
 ATTACK OF THE DUCKS
 
+WITH REGARDS TO THE COMMITS ON GITHUB, THE 'ONE BIG COMMIT' WAS WHEN YOU FIXED MY OCTET AS I HAD ACCIDENTALLY CLONED FROM YOUR ACCOUNT, AND YOU HAD TO GO INTO THE CODE AND CHANGE WHERE IT WAS SOURCED FROM, AMONG OTHER THINGS. THIS IS JUST TO REMIND YOU OF THIS FACT.
+
+
 Below is information about the changes made to Space Invaders to become Duck Invaders.
 
 I added a function which would restart the game when the Enter key was pressed and released, at the Game Over screen.
